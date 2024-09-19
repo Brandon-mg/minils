@@ -60,6 +60,11 @@ impl fmt::Display for FileData {
         if let Some(i) = self.params.long.then(|| self.metadata.len().to_string()) {
             out_str.push_str(&format!("\t{}", i));
         };
+        match self.params.sort {
+            SortType::LastModified => out_str.push_str(&format!("\t{:?}", self.metadata.modified().unwrap())),
+            SortType::Created => out_str.push_str(&format!("\t{:?}", self.metadata.created().unwrap())),
+            _ => (),
+        };
         write!(f, "{}", out_str)
     }
 }
@@ -86,6 +91,12 @@ fn ls_dir(dir: &PathBuf, params: Params) -> Result<(), Box<dyn std::error::Error
         };
         items.push(new_item);
     }
+    match params.sort {
+        SortType::LastModified => items.sort_by_key(|d| d.metadata.modified().unwrap()),
+        SortType::Created => items.sort_by_key(|d| d.metadata.created().unwrap()),
+        SortType::Size => items.sort_by_key(|d| d.metadata.len()),
+        SortType::Name => (),
+    };
     for item in items.iter() {
         println!("{}", item);
     }
