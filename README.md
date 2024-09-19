@@ -12,3 +12,11 @@ params
 - "-m" => Sort By Last Modified !Partially implemented
 - "-d" => Show Only Directories !Unimplemented
 - "-f" => Show Only Files !Unimplemented
+
+
+TODO
+
+Parse SystemTime to a human readable format
+Implement show dir and file specific params
+fix Display to improve readability
+add recursive ls
