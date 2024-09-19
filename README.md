@@ -6,6 +6,7 @@ minils \<params\> \<path\>
 
 params
 - "-p" => Show If ReadOnly or Writeable
+- "-r" => Recursive ls
 - "-l" => Show Size In Bytes
 - "-s" => Sort By Size
 - "-c" => Sort By Created !Partially implemented
@@ -22,4 +23,3 @@ Implement show dir and file specific params
 
 fix Display to improve readability
 
-add recursive ls

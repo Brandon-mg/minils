@@ -1,31 +1,27 @@
 use std::fs::{Metadata, Permissions};
 use std::{env, fmt, fs, io};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process;
 //std::os::unix::fs::PermissionsExt;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 enum ShowType{
+    #[default]
     All,
     File,
     Dir,
 }
 
-impl Default for ShowType{
-    fn default() -> Self {ShowType::All}
-}
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 enum SortType {
+    #[default]
     Name,
     LastModified,
     Created,
     Size,
 }
 
-impl Default for SortType{
-    fn default() -> Self {SortType::Name}
-}
+
 
 #[derive(Debug, Default, Clone)]
 struct Params {
@@ -80,7 +76,7 @@ fn ls_dir(dir: &PathBuf, params: Params) -> Result<(), Box<dyn std::error::Error
         let file_name = item
                                 .file_name()
                                 .into_string()
-                                .or_else(|f| Err(format!("Errored on: {:?}", f)))?;
+                                .map_err(|f| format!("Errored on: {:?}", f))?;
         let metadata = item.metadata()?;
         let permissions = parse_permissions(metadata.permissions()).unwrap_or("Writeable".to_string());
         let new_item = FileData {
@@ -97,13 +93,15 @@ fn ls_dir(dir: &PathBuf, params: Params) -> Result<(), Box<dyn std::error::Error
         SortType::Size => items.sort_by_key(|d| d.metadata.len()),
         SortType::Name => (),
     };
+    let relpath = dir.to_str().expect("Failed to read directory");
+    println!("\n{}\n", fs::canonicalize(dir).unwrap_or_else(|_| (&format!("failed to get absolute path for: {}", relpath)).into()).to_str().expect("Failed to read directory"));
     for item in items.iter() {
         println!("{}", item);
     }
     Ok(())
 }
 
-fn ls_file(item: &PathBuf, params: Params) -> Result<(), Box<dyn std::error::Error>>{
+fn ls_file(item: &Path, params: Params) -> Result<(), Box<dyn std::error::Error>>{
     
     let file_name = item
                             .file_name()
@@ -129,7 +127,20 @@ fn ls(path: &PathBuf, params: Params) -> Result<(), Box<dyn std::error::Error>>{
     }
     ls_file(path, params)
 }
+
+fn ls_recurse(path: &PathBuf, params: Params) -> Result<(), Box<dyn std::error::Error>>{
+    ls_dir(path, params.clone())?;
+    for item in fs::read_dir(path)? {
+        let item = item?;
+        if item.metadata()?.is_dir(){ls_recurse(&item.path(), params.clone())?}
+            
+    };
+    Ok(())
+}
+
+
 fn main() {
+    println!("{:?}", fs::canonicalize(".").unwrap());
     let mut params = Params::default();
     println!("{:?}", params);
     let args = env::args().skip(1).collect::<Vec<String>>();
@@ -141,10 +152,12 @@ fn main() {
     } else {
         params.path = PathBuf::from(".");
     };
+    let mut recurse = false;
     for argument in args {
         match argument.as_str() {
             "-p" => params.perms = true,
             "-l" => params.long = true,
+            "-r" => recurse = true,
             "-c" => params.sort = SortType::Created,
             "-m" => params.sort = SortType::LastModified,
             "-s" => params.sort = SortType::Size,
@@ -154,9 +167,11 @@ fn main() {
 
         }
     };
-
-
-    if ls(&params.path.clone(), params).is_err() {
+    if !recurse {
+        if ls(&params.path.clone(), params).is_err() {
+            process::exit(1);
+        }
+    } else if ls_recurse(&params.path.clone(), params).is_err() {
         process::exit(1);
     }
 }
