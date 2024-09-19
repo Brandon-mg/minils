@@ -7,8 +7,8 @@ minils \<params\> \<path\>
 params
 - "-p" => Show If ReadOnly or Writeable
 - "-l" => Show Size In Bytes
-- "-c" => Sort By Created !Unimplemented
-- "-m" => Sort By Last Modified !Unimplemented
-- "-s" => Sort By Size !Unimplemented
+- "-s" => Sort By Size
+- "-c" => Sort By Created !Partially implemented
+- "-m" => Sort By Last Modified !Partially implemented
 - "-d" => Show Only Directories !Unimplemented
 - "-f" => Show Only Files !Unimplemented
