@@ -17,6 +17,9 @@ params
 TODO
 
 Parse SystemTime to a human readable format
+
 Implement show dir and file specific params
+
 fix Display to improve readability
+
 add recursive ls
