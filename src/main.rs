@@ -96,7 +96,13 @@ fn ls_dir(dir: &PathBuf, params: Params) -> Result<(), Box<dyn std::error::Error
     let relpath = dir.to_str().expect("Failed to read directory");
     println!("\n{}\n", fs::canonicalize(dir).unwrap_or_else(|_| (&format!("failed to get absolute path for: {}", relpath)).into()).to_str().expect("Failed to read directory"));
     for item in items.iter() {
-        println!("{}", item);
+        match params.show {
+            ShowType::Dir => item.metadata.is_dir().then(|| println!("{}", item)),
+            ShowType::File => item.metadata.is_file().then(|| println!("{}", item)),
+            ShowType::All => Some(println!("{}", item)),
+            
+        };
+        
     }
     Ok(())
 }
